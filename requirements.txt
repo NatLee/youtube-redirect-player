@@ -1,0 +1,10 @@
+
+youtube-dl
+
+flask
+
+flask_socketio
+
+loguru
+
+sqlalchemy
