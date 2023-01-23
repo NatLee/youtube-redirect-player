@@ -1,0 +1,332 @@
+<html>
+  <head>
+    <link rel="shortcut icon" href="#" />
+    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <video-js
+      id="video"
+      class="video-js"
+      controls
+      preload="auto"
+      width="640"
+      height="390"
+      autoplay="true"
+      data-setup="{}"
+    ></video-js>
+
+    <br /><br /><br />
+
+    <div id="title"></div>
+    <div id="url"></div>
+    <div id="duration"></div>
+    <div id="user"></div>
+
+    <br /><br />
+
+    <div>
+      User: <input id="request_user" value="natlee" /><br />
+      Youtube:<input
+        id="request_youtube"
+        value="https://www.youtube.com/watch?v=JJo-zUi9E5U"
+      />
+    </div>
+    <button onclick="request()">Request</button>
+    <button onclick="save_to_default()">Save</button>
+    <br /><br />
+
+    <button onclick="play()">Play</button>
+    <button onclick="pause()">Pause</button>
+    <button onclick="mute()">Mute</button>
+
+    <form id="broadcast_pause" method="POST" action="#">
+      <input type="submit" value="Pause all player" />
+    </form>
+    <form id="broadcast_play" method="POST" action="#">
+      <input type="submit" value="Play all player" />
+    </form>
+    <form id="broadcast_mute" method="POST" action="#">
+      <input type="submit" value="Mute all player" />
+    </form>
+
+    <form id="disconnect" method="POST" action="#">
+      <input type="submit" value="Disconnect Server" />
+    </form>
+
+    <div id="log"></div>
+
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+
+    <script src="https://vjs.zencdn.net/7.11.4/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
+
+    <script>
+      const namespace = "/test";
+      var playlist = [];
+
+      function play() {
+        var videoPlayer = videojs("video");
+        videoPlayer.play();
+      }
+      function pause() {
+        var videoPlayer = videojs("video");
+        videoPlayer.pause();
+      }
+      function mute() {
+        var videoPlayer = videojs("video");
+        videoPlayer.muted(true);
+      }
+
+      function get_playlist() {
+        $.ajax({
+          type: "GET",
+          dataType: "json",
+          url: "playlist/get_playlist",
+          success: function (res) {
+            playlist = res;
+          },
+          error: function (err) {
+            console.log(err);
+          },
+        });
+      }
+
+      function change_player_src() {
+        var videoPlayer = videojs("video");
+        if (playlist.length != 0) {
+          $.ajax({
+            type: "GET",
+            url: "playlist/get_yt_info?v=" + playlist[0].url,
+            success: function (res) {
+              videoPlayer.src({
+                type: "video/mp4",
+                src: res.video_url,
+              });
+              $("#title").text(res.title);
+              $("#user").text(playlist[0].user);
+              $("#url").text(res.url);
+              $("#duration").text(res.duration);
+            },
+            error: function (err) {
+              console.log(err);
+            },
+          });
+        } else {
+          console.log("Playlist is empty.");
+          $.when(
+            $.ajax("playlist/get_playlist").then((res) => {
+              playlist = res;
+              console.log("Got playlist and play");
+              change_player_src();
+            })
+          );
+        }
+      }
+
+      function request() {
+        var socket = io(namespace);
+        var user = $("#request_user").val();
+        var youtube_address = $("#request_youtube").val();
+        $.ajax({
+          type: "GET",
+          url: "playlist/song_request?user=" + user + "&url=" + youtube_address,
+          success: function (res) {
+            if (res.length != 0) {
+              let new_request = {
+                duration: res.duration,
+                title: res.title,
+                url: res.url,
+                is_request: true,
+                user: user,
+                add_time: Date.now(),
+              };
+              socket.emit("player_control", {
+                data: "new_request",
+                src: new_request,
+              });
+            } else {
+              console.log("Song is duplicated in the playlist.");
+            }
+          },
+          error: function (err) {
+            console.log(err);
+          },
+        });
+      }
+
+      function save_to_default() {
+        var user = $("#user").text();
+
+        if (user === "") {
+          user = "anonymous";
+        }
+
+        var url = $("#url").text();
+        var duration = $("#duration").text();
+        $.ajax({
+          type: "GET",
+          url:
+            "playlist/add_now_video_to_default_playlist?user=" +
+            user +
+            "&url=" +
+            url +
+            "&duration=" +
+            duration,
+          success: function (res) {
+            console.log("Now playing video is saved to default playlist.");
+          },
+          error: function (err) {
+            console.log(err);
+          },
+        });
+      }
+
+      function init_player() {
+        $.when(
+          $.ajax("playlist/get_playlist").then((res) => {
+            playlist = res;
+            change_player_src();
+          })
+        );
+      }
+
+      function add_video_event() {
+        var socket = io(namespace);
+
+        var videoPlayer = videojs("video");
+
+        // ready event
+        videoPlayer.ready(function () {
+          videoPlayer.volume(0.05);
+          console.log("ready");
+        });
+
+        // ended event
+        videoPlayer.on("ended", function () {
+          var user = $("#user").text();
+          var url = $("#url").text();
+          var duration = $("#duration").text();
+
+          if (user === "") {
+            user = "anonymous";
+          }
+          $.ajax({
+            type: "GET",
+            url:
+              "playlist/ended?user=" +
+              user +
+              "&url=" +
+              url +
+              "&duration=" +
+              duration,
+            success: function (res) {
+              console.log(res);
+            },
+            error: function (err) {
+              console.log(err);
+            },
+          });
+
+          $.ajax("playlist/remove_request?url=" + url).then(
+            $.when(playlist.shift()).done(change_player_src())
+          );
+        });
+      }
+
+      function add_socket_event() {
+        var socket = io(namespace);
+
+        socket.on("connect", function () {
+          socket.emit("player_control", {
+            data: "Connected to the SocketServer...",
+          });
+        });
+
+        socket.on("my_response", function (msg, cb) {
+          $("#log").append(
+            "<br>" +
+              $("<div/>")
+                .text("logs #" + msg.count + ": " + msg.data)
+                .html()
+          );
+          if (cb) {
+            cb();
+          }
+
+          if (msg.data == "pause") {
+            pause();
+          }
+          if (msg.data == "play") {
+            play();
+          }
+          if (msg.data == "mute") {
+            mute();
+          }
+          if (msg.data == "queue") {
+            console.log(msg.src);
+          }
+          if (msg.data == "new_request") {
+            if (playlist.length === 0) {
+              $.when(playlist.push(msg.src)).done(change_player_src());
+            } else if (playlist.length === 1) {
+              playlist.push(msg.src);
+              console.log(msg.src.title + " has been added into playlist.");
+            } else {
+              playlist.push(msg.src);
+              console.log(msg.src.title + " has been added into playlist.");
+
+              // new playlist for priority
+              var live_video = [playlist[0]]; // first one
+              var request_playlist = [];
+              var default_playlist = [];
+
+              playlist.forEach((video, index) => {
+                if (index != 0) {
+                  if (video.is_request) {
+                    request_playlist.push(video);
+                  } else {
+                    default_playlist.push(video);
+                  }
+                }
+              });
+              playlist = live_video.concat(
+                request_playlist.concat(default_playlist)
+              );
+            }
+          }
+        });
+
+        $("form#broadcast_pause").submit(function (event) {
+          socket.emit("player_control", {
+            data: "pause",
+          });
+          return false;
+        });
+        $("form#broadcast_play").submit(function (event) {
+          socket.emit("player_control", {
+            data: "play",
+          });
+          return false;
+        });
+        $("form#broadcast_mute").submit(function (event) {
+          socket.emit("player_control", {
+            data: "mute",
+          });
+          return false;
+        });
+
+        $("form#disconnect").submit(function (event) {
+          socket.emit("disconnect_request");
+          return false;
+        });
+      }
+
+      $(document).ready(function () {
+        init_player();
+        add_video_event();
+        add_socket_event();
+      });
+    </script>
+  </body>
+</html>
