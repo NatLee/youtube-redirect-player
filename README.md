@@ -6,6 +6,8 @@ This project used to redirect Youtube videos to local server.
 And its use flask and websocket as backend.
 You can play video anywhere cause the playlist and history will be transferred with websocket.
 
+> This is a side project extended with my other repo [youtube-video-redirector](https://github.com/NatLee/Youtube-Video-Redirector)
+
 ## Table
 
 `Playlist` has split into 3 tables.
