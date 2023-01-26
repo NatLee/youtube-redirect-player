@@ -1,5 +1,5 @@
 
-youtube-dl
+yt_dlp # for extracting redirect url from youtube
 
 flask
 
