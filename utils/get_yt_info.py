@@ -1,5 +1,5 @@
 
-from  youtube_dl import YoutubeDL
+from  yt_dlp import YoutubeDL
 
 def get_yt_info(youtube_video_id):
     """
