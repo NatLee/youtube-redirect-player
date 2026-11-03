@@ -1,0 +1,151 @@
+<!doctype html>
+<!--
+  README banner, one of a pair with youtube-video-redirector (same layout, same palette).
+  Render the light and dark versions (#dark picks the dark theme) with a Chromium-based browser:
+    msedge --headless=new --hide-scrollbars --force-device-scale-factor=2 --window-size=960,400
+           --default-background-color=00000000 --virtual-time-budget=5000
+           --screenshot=hero-light.png "file:///…/hero.html"
+  then shrink with: magick hero-light.png -strip -dither None -colors 256 hero-light.png
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>YouTube Redirect Player banner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=block" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f3ec; --ink: #1f1c17; --muted: #6b6458; --line: #e0d8c8; --card: #fffdf8;
+    --brass: #8a5f12; --brass-2: #b8862b; --teal: #0f6b62; --wire: #b9ae99;
+    --tint1: rgba(184, 134, 43, .16); --tint2: rgba(15, 107, 98, .08);
+    --shadow: 0 1px 2px rgba(31, 28, 23, .06), 0 8px 22px rgba(31, 28, 23, .07);
+  }
+  .dark {
+    --bg: #12100d; --ink: #f3eee4; --muted: #a59d8f; --line: #3a332a; --card: #1c1915;
+    --brass: #e0b354; --brass-2: #f0c96e; --teal: #5ccfc0; --wire: #6b6253;
+    --tint1: rgba(224, 179, 84, .14); --tint2: rgba(92, 207, 192, .07);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .45), 0 10px 26px rgba(0, 0, 0, .4);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; }
+  body { width: 960px; height: 400px; font-family: Inter, "Segoe UI", sans-serif; color: var(--ink); }
+  .frame { position: relative; width: 960px; height: 400px; border-radius: 22px; overflow: hidden;
+           border: 1px solid var(--line);
+           background: radial-gradient(560px 300px at 96% 0%, var(--tint1), transparent 70%),
+                       radial-gradient(420px 240px at 0% 100%, var(--tint2), transparent 70%), var(--bg); }
+  .frame::after { content: ""; position: absolute; inset: 10px; border-radius: 15px; border: 1px solid var(--line);
+                  opacity: .7; pointer-events: none; }
+
+  header { position: absolute; left: 46px; top: 36px; width: 640px; }
+  .eyebrow { margin: 0; font-size: 11.5px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--brass); }
+  h1 { margin: 10px 0 0; font-family: Fraunces, Georgia, serif; font-size: 44px; font-weight: 700; letter-spacing: -0.015em; line-height: 1; }
+  .tag { margin: 12px 0 0; font-size: 16.5px; color: var(--muted); }
+  .tag b { color: var(--ink); font-weight: 600; }
+
+  .stamp { position: absolute; right: 46px; top: 40px; transform: rotate(-5deg); text-align: center;
+           border: 2px solid var(--brass); border-radius: 12px; padding: 9px 16px 8px; color: var(--brass); }
+  .stamp .big { font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: .18em; }
+  .stamp .small { font-size: 11px; font-weight: 600; letter-spacing: .06em; margin-top: 2px; }
+  .stamp .small span { font-family: "JetBrains Mono", Consolas, monospace; }
+
+  .node { position: absolute; background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+          box-shadow: var(--shadow); padding: 13px 16px; }
+  .label { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+           display: flex; align-items: center; gap: 8px; }
+  .label i { width: 8px; height: 8px; border-radius: 50%; background: var(--brass-2); }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; font-size: 14px; margin-top: 7px; white-space: nowrap; }
+  .sub { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+  .sub code { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12px; color: var(--ink); }
+  .title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; margin-top: 6px; }
+
+  #players { left: 46px; top: 162px; width: 232px; }
+  #hub { left: 352px; top: 174px; width: 240px; }
+  #db { left: 666px; top: 160px; width: 248px; padding-top: 11px; padding-bottom: 11px; }
+  #db .label i { background: var(--teal); }
+  .screens { display: flex; gap: 8px; margin-top: 10px; }
+  .screen { flex: 1; height: 44px; border-radius: 7px; border: 1px solid var(--line); background: var(--bg);
+            position: relative; overflow: hidden; }
+  .screen::before { content: ""; position: absolute; left: 50%; top: 50%; margin: -7px 0 0 -5px;
+                    border-left: 12px solid var(--brass-2); border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+  .screen::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 6px; height: 3px; border-radius: 2px;
+                   background: linear-gradient(90deg, var(--teal) 42%, var(--line) 42%); }
+  .pills { display: grid; gap: 5px; margin-top: 8px; }
+  .pill { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px;
+          padding: 2px 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+  .pill b { font-weight: 600; }
+  .pill span { color: var(--muted); font-size: 11.5px; }
+
+  svg.wires { position: absolute; inset: 0; }
+  .wire { fill: none; stroke: var(--wire); stroke-width: 2; stroke-dasharray: 5 6; }
+  .head { fill: var(--wire); }
+
+  .lineage { position: absolute; left: 46px; right: 46px; bottom: 34px; height: 58px; }
+  .rail { position: absolute; left: 7px; right: 7px; top: 7px; height: 2px; background: var(--line); }
+  .stop { position: absolute; top: 0; width: 260px; }
+  .stop .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--wire); background: var(--bg); }
+  .stop .name { margin-top: 8px; font-family: "JetBrains Mono", Consolas, monospace; font-size: 12.5px; color: var(--muted); }
+  .stop .when { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: .04em; }
+  .stop.here .dot { border-color: var(--brass); background: var(--brass); box-shadow: 0 0 0 4px var(--tint1); }
+  .stop.here .name { color: var(--ink); font-weight: 500; }
+  .stop.now .dot { border-color: var(--teal); }
+  .stop.now .name { color: var(--teal); }
+  #g1 { left: 0; }
+  #g2 { left: 434px; transform: translateX(-50%); text-align: center; }
+  #g3 { right: 0; width: 180px; text-align: right; }
+  #g2 .dot { margin: 0 auto; }
+  #g3 .dot { margin-left: auto; }
+</style>
+</head>
+<body>
+<script>if (location.hash === '#dark') document.documentElement.className = 'dark';</script>
+<div class="frame">
+  <header>
+    <p class="eyebrow">Exhibit 2 of 3 · the streaming-player lineage</p>
+    <h1>YouTube Redirect Player</h1>
+    <p class="tag">One shared playlist. Requests and <b>play / pause / mute</b> reach <b>every open player</b>.</p>
+  </header>
+
+  <div class="stamp">
+    <div class="big">RETIRED</div>
+    <div class="small">successor: <span>streaming-player</span></div>
+  </div>
+
+  <svg class="wires" width="960" height="400">
+    <path class="wire" d="M286 228 H344"/>
+    <path class="head" d="M350 228 l-9 -5 v10 z"/>
+    <path class="head" d="M280 228 l9 -5 v10 z"/>
+    <path class="wire" d="M600 228 H658"/>
+    <path class="head" d="M664 228 l-9 -5 v10 z"/>
+    <path class="head" d="M594 228 l9 -5 v10 z"/>
+  </svg>
+
+  <div class="node" id="players">
+    <div class="label"><i></i>Every open player</div>
+    <div class="screens"><div class="screen"></div><div class="screen"></div><div class="screen"></div></div>
+    <div class="sub">request, save, pause all, mute all</div>
+  </div>
+
+  <div class="node" id="hub">
+    <div class="label"><i></i>Flask + Socket.IO</div>
+    <div class="title">Relays it to everyone</div>
+    <div class="sub"><code>yt-dlp</code> finds each direct link</div>
+  </div>
+
+  <div class="node" id="db">
+    <div class="label"><i></i>SQLite · 3 playlists</div>
+    <div class="pills">
+      <div class="pill"><b>Request</b><span>plays first</span></div>
+      <div class="pill"><b>Default</b><span>shuffled</span></div>
+      <div class="pill"><b>History</b><span>last 200</span></div>
+    </div>
+  </div>
+
+  <div class="lineage">
+    <div class="rail"></div>
+    <div class="stop" id="g1"><div class="dot"></div><div class="name">youtube-video-redirector</div><div class="when">GEN 1 · 2021</div></div>
+    <div class="stop here" id="g2"><div class="dot"></div><div class="name">youtube-redirect-player</div><div class="when">GEN 2 · 2023 · YOU ARE HERE</div></div>
+    <div class="stop now" id="g3"><div class="dot"></div><div class="name">streaming-player</div><div class="when">GEN 3 · CURRENT</div></div>
+  </div>
+</div>
+</body>
+</html>
