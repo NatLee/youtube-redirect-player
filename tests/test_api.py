@@ -7,6 +7,18 @@ import playlist
 from conftest import watch_url
 
 
+def test_the_player_page_loads(client):
+    response = client.get('/')
+
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert 'const namespace = "/test";' in page
+    for element in ('id="video"', 'id="request_user"', 'id="request_youtube"', 'id="broadcast_pause"',
+                    'id="broadcast_play"', 'id="broadcast_mute"', 'id="disconnect"', 'id="log"'):
+        assert element in page
+    assert page.count('integrity="sha384-') == 4
+
+
 def test_a_request_is_looked_up_queued_and_answered(client, yt):
     response = client.get('/playlist/song_request', query_string={'user': 'NatLee', 'url': 'JJo-zUi9E5U'})
 
