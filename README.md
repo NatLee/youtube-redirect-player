@@ -30,13 +30,19 @@ Three repos, one idea that kept growing. Each generation added something and let
 
 ```mermaid
 flowchart LR
-    G1["<b>Gen 1 · youtube-video-redirector</b><br/>2021 · Flask + yt-dlp<br/>one video: /?v=id, its direct link, a player"]
-    G2["<b>Gen 2 · youtube-redirect-player</b><br/>2023 · Flask + Socket.IO + SQLite<br/>one shared playlist on every open screen"]
-    G3["<b>Gen 3 · streaming-player</b><br/>current · Django + Channels + Redis<br/>a stream player your chat controls"]
-    G1 -- "+ request / default / history playlists<br/>+ play, pause, mute on every screen at once<br/>− the one-video ?v= page and the visible direct link" --> G2
-    G2 -- "+ Nightbot chat commands, login, admin panel<br/>+ queue with favorite and block marks, Swagger<br/>− pause and mute for every screen at once" --> G3
+    G1["Gen 1 · 2021<br/><b>youtube-video-redirector</b><br/>Flask + yt-dlp"]
+    G2["Gen 2 · 2023<br/><b>youtube-redirect-player</b><br/>Flask + Socket.IO + SQLite"]
+    G3["Gen 3 · current<br/><b>streaming-player</b><br/>Django + Channels + Redis"]
+    G1 -- "+ three playlists<br/>+ every screen in sync<br/>− the ?v= page" --> G2
+    G2 -- "+ chat commands<br/>+ login, admin panel<br/>− pause all screens" --> G3
     style G2 fill:#f2e6cb,stroke:#8a5f12,stroke-width:2px,color:#1f1c17
 ```
+
+| | Gen 1 | Gen 2 | Gen 3 |
+|---|---|---|---|
+| In one line | One video per URL | One shared playlist on every open screen | A stream player your chat controls |
+| Added | `/?v=<id>` finds the direct link and plays it | Request, default and history playlists; play, pause and mute on every screen at once | Nightbot chat commands, login, admin panel, a queue with favorite and block marks, Swagger |
+| Let go | Nothing yet, it was the first | The one-video `?v=` page and the visible direct link | Pause and mute for every screen at once |
 
 You are looking at Gen 2. Gen 1 is
 [youtube-video-redirector](https://github.com/NatLee/youtube-video-redirector); Gen 3 is
