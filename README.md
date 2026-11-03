@@ -29,7 +29,7 @@ and mute to all open players. Open it on a laptop and a TV, and both follow alon
 Three repos, one idea that kept growing. Each generation added something and let something go.
 
 ```mermaid
-flowchart LR
+flowchart TB
     G1["Gen 1 · 2021<br/><b>youtube-video-redirector</b><br/>Flask + yt-dlp"]
     G2["Gen 2 · 2023<br/><b>youtube-redirect-player</b><br/>Flask + Socket.IO + SQLite"]
     G3["Gen 3 · current<br/><b>streaming-player</b><br/>Django + Channels + Redis"]
