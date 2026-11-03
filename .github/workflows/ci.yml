@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: youtube-redirect-player
+
+jobs:
+  docker:
+    name: Tests and container smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # The test stage runs pytest inside the same Python image the app ships in.
+      - name: Run the tests
+        run: docker build --target test --progress plain -t "$IMAGE:test" .
+
+      - name: Build the app image
+        run: docker build -t "$IMAGE" .
+
+      - name: Start the container and check it answers
+        run: |
+          docker run -d --name app -p 5000:5000 "$IMAGE"
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:5000/ -o player.html && break
+            sleep 1
+          done
+          grep -q 'id="request_youtube"' player.html
+          echo "player page is up"
+          test "$(curl -fsS http://localhost:5000/playlist/get_playlist)" = "[]"
+          echo "playlist API answers"
+          # Socket.IO handshake: the server answers with a session id.
+          curl -fsS "http://localhost:5000/socket.io/?EIO=4&transport=polling" | grep -q '"sid"'
+          echo "Socket.IO answers"
+          # yt-dlp needs a JavaScript runtime for YouTube; make sure the image has one.
+          docker exec app deno --version
+          docker exec app python -c "import yt_dlp_ejs, yt_dlp; print('yt-dlp', yt_dlp.version.__version__)"
+          test "$(docker exec app id -u)" != 0
+          docker exec app ls -l /data/playlist.db
+
+      - name: Container logs
+        if: always()
+        run: docker logs app || true

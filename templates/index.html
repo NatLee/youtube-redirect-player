@@ -1,332 +1,373 @@
-<html>
-  <head>
-    <link rel="shortcut icon" href="#" />
-    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
-  </head>
+<!doctype html>
+{#- Front-end libraries from their CDNs. Bump a version and its SRI hash together. -#}
+{%- set cdn = {
+  'videojs_css': ('https://vjs.zencdn.net/8.24.2/video-js.min.css', 'sha384-xfG5I3MEODgvS2hsikP3bkQWFgJNS4uI4dJQt7PoOmActllz5+bPWPywC/ow2KWd'),
+  'videojs_js': ('https://vjs.zencdn.net/8.24.2/video.min.js', 'sha384-ZX0Vl+Q/o9iL7Bnze+guucw31RhBDP/+9H4+wWu7onfSG7Bkg0dXDPB7YA4orwLV'),
+  'jquery': ('https://code.jquery.com/jquery-3.7.1.min.js', 'sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs'),
+  'socketio': ('https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.4/socket.io.min.js', 'sha384-fBrXvbDtHoeKWJ/hcA6M+YGueiDW+h45I7V6F2kD1S8bOkrF9rZYPLVkCR6BLR/1'),
+} %}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YouTube Redirect Player</title>
+  <link rel="shortcut icon" href="data:,">
+  <link rel="stylesheet" href="{{ cdn.videojs_css[0] }}" integrity="{{ cdn.videojs_css[1] }}" crossorigin="anonymous">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --paper: #f6f3ec; --card: #fffdf8; --ink: #1f1c17; --muted: #6b6458; --line: #e3dccd;
+      --brass: #8a5f12; --brass-soft: #f2e6cb; --teal: #0f6b62; --teal-soft: #dcefeb;
+      --shadow: 0 1px 2px rgba(31, 28, 23, .05), 0 12px 32px rgba(31, 28, 23, .07);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #12100d; --card: #1b1814; --ink: #f3eee4; --muted: #a59d8f; --line: #332d25;
+        --brass: #e0b354; --brass-soft: #2e2512; --teal: #5ccfc0; --teal-soft: #12302c;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--paper); color: var(--ink);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 36px 20px 48px; }
+    .eyebrow {
+      margin: 0 0 6px; color: var(--brass); font-size: 12px; font-weight: 700;
+      letter-spacing: .16em; text-transform: uppercase;
+    }
+    h1 { margin: 0; font: 700 36px/1.1 Georgia, "Times New Roman", serif; letter-spacing: -.01em; }
+    .lede { margin: 8px 0 24px; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      overflow: hidden; background: var(--card); border: 1px solid var(--line);
+      border-radius: 16px; box-shadow: var(--shadow);
+    }
+    .side { display: grid; gap: 20px; }
+    .pad { padding: 16px 18px; }
+    h2 {
+      margin: 0 0 10px; color: var(--muted); font-size: 11px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+    }
+    .now h3 { margin: 0 0 6px; font-size: 18px; line-height: 1.35; }
+    .facts { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; color: var(--muted); font-size: 13px; }
+    .facts b { color: var(--ink); font-weight: 600; }
+    #url { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12.5px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    label { display: block; margin: 0 0 4px; color: var(--muted); font-size: 12px; }
+    input {
+      width: 100%; margin-bottom: 10px; padding: 9px 11px; font-size: 14px; color: var(--ink);
+      background: var(--paper); border: 1px solid var(--line); border-radius: 9px;
+    }
+    input:focus { outline: 2px solid var(--brass); outline-offset: 1px; }
+    #request_youtube { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12.5px; }
+    button, input[type=submit] {
+      width: auto; margin: 0; padding: 8px 14px; font: 600 13.5px system-ui, sans-serif; color: var(--ink);
+      background: var(--card); border: 1px solid var(--line); border-radius: 9px; cursor: pointer;
+    }
+    button.primary { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+    form { display: inline; }
+    .queue, .log {
+      max-height: 210px; margin: 0; padding: 0; overflow: auto; list-style: none;
+      font-size: 13px;
+    }
+    .queue li { display: flex; gap: 8px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line); }
+    .queue li:first-child { border-top: 0; }
+    .queue .what { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue .who { color: var(--muted); }
+    .tag { padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .tag.request { color: var(--brass); background: var(--brass-soft); }
+    .tag.default { color: var(--teal); background: var(--teal-soft); }
+    .log { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12px; color: var(--muted); }
+    .log li { padding: 2px 0; }
+    #status { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+    #status:empty { display: none; }
+    footer {
+      margin-top: 32px; padding-top: 14px; font-size: 13px; color: var(--muted);
+      border-top: 1px solid var(--line);
+    }
+    footer a { color: var(--brass); }
+  </style>
+</head>
 
-  <body>
-    <video-js
-      id="video"
-      class="video-js"
-      controls
-      preload="auto"
-      width="640"
-      height="390"
-      autoplay="true"
-      data-setup="{}"
-    ></video-js>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Generation 2 of 3 · since 2023</p>
+    <h1>YouTube Redirect Player</h1>
+    <p class="lede">One playlist for every screen: requests and play / pause / mute reach every open player over a websocket.</p>
+  </header>
 
-    <br /><br /><br />
+  <div class="grid">
+    <div class="side">
+      <section class="card">
+        <video-js id="video" class="video-js vjs-fluid vjs-big-play-centered" controls preload="auto" autoplay></video-js>
+        <div class="pad now">
+          <h2>Now playing</h2>
+          <h3 id="title"></h3>
+          <p class="facts">
+            <span>Requested by <b id="user"></b></span>
+            <span><b id="duration"></b> s</span>
+            <span id="url"></span>
+          </p>
+          <p id="status"></p>
+          <div class="row">
+            <button onclick="play()">Play</button>
+            <button onclick="pause()">Pause</button>
+            <button onclick="mute()">Mute</button>
+            <button onclick="save_to_default()" title="Add the video that is playing now to the default playlist">Save</button>
+          </div>
+        </div>
+      </section>
 
-    <div id="title"></div>
-    <div id="url"></div>
-    <div id="duration"></div>
-    <div id="user"></div>
-
-    <br /><br />
-
-    <div>
-      User: <input id="request_user" value="natlee" /><br />
-      Youtube:<input
-        id="request_youtube"
-        value="https://www.youtube.com/watch?v=JJo-zUi9E5U"
-      />
+      <section class="card pad">
+        <h2>Socket log</h2>
+        <ol id="log" class="log"></ol>
+      </section>
     </div>
-    <button onclick="request()">Request</button>
-    <button onclick="save_to_default()">Save</button>
-    <br /><br />
 
-    <button onclick="play()">Play</button>
-    <button onclick="pause()">Pause</button>
-    <button onclick="mute()">Mute</button>
+    <div class="side">
+      <section class="card pad">
+        <h2>Request a video</h2>
+        <label for="request_user">User</label>
+        <input id="request_user" value="natlee">
+        <label for="request_youtube">YouTube</label>
+        <input id="request_youtube" value="https://www.youtube.com/watch?v=JJo-zUi9E5U">
+        <button class="primary" onclick="request()">Request</button>
+      </section>
 
-    <form id="broadcast_pause" method="POST" action="#">
-      <input type="submit" value="Pause all player" />
-    </form>
-    <form id="broadcast_play" method="POST" action="#">
-      <input type="submit" value="Play all player" />
-    </form>
-    <form id="broadcast_mute" method="POST" action="#">
-      <input type="submit" value="Mute all player" />
-    </form>
+      <section class="card pad">
+        <h2>Every player</h2>
+        <div class="row" style="margin-top: 0">
+          <form id="broadcast_pause" method="POST" action="#"><input type="submit" value="Pause all player"></form>
+          <form id="broadcast_play" method="POST" action="#"><input type="submit" value="Play all player"></form>
+          <form id="broadcast_mute" method="POST" action="#"><input type="submit" value="Mute all player"></form>
+          <form id="disconnect" method="POST" action="#"><input type="submit" value="Disconnect Server"></form>
+        </div>
+      </section>
 
-    <form id="disconnect" method="POST" action="#">
-      <input type="submit" value="Disconnect Server" />
-    </form>
+      <section class="card pad">
+        <h2>Up next</h2>
+        <ol id="queue" class="queue"></ol>
+      </section>
+    </div>
+  </div>
 
-    <div id="log"></div>
+  <footer>
+    Retired. This is the second of three generations; the player that grew out of it is
+    <a href="https://github.com/NatLee/streaming-player">streaming-player</a>.
+  </footer>
+</main>
 
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="{{ cdn.jquery[0] }}" integrity="{{ cdn.jquery[1] }}" crossorigin="anonymous"></script>
+<script src="{{ cdn.videojs_js[0] }}" integrity="{{ cdn.videojs_js[1] }}" crossorigin="anonymous"></script>
+<script src="{{ cdn.socketio[0] }}" integrity="{{ cdn.socketio[1] }}" crossorigin="anonymous"></script>
 
-    <script src="https://vjs.zencdn.net/7.11.4/video.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
+<script>
+  const namespace = {{ namespace|tojson }};
+  // One websocket connection for the whole page. It connects once the handlers
+  // are in place (end of add_socket_event), so no early message is missed.
+  const socket = io(namespace, { autoConnect: false });
+  const videoPlayer = videojs("video");
 
-    <script>
-      const namespace = "/test";
-      var playlist = [];
+  // playlist[0] is the video on screen; the rest is the queue.
+  var playlist = [];
 
-      function play() {
-        var videoPlayer = videojs("video");
-        videoPlayer.play();
+  function play() {
+    videoPlayer.play();
+  }
+  function pause() {
+    videoPlayer.pause();
+  }
+  function mute() {
+    videoPlayer.muted(true);
+  }
+
+  function now_playing() {
+    return {
+      user: $("#user").text() || "anonymous",
+      url: $("#url").text(),
+      duration: $("#duration").text(),
+    };
+  }
+
+  // The end of a link, e.g. "watch?v=JJo-zUi9E5U", for videos the page has no title for.
+  function short_link(url) {
+    try {
+      const link = new URL(url);
+      return decodeURIComponent(link.pathname.split("/").pop()) + link.search;
+    } catch (e) {
+      return url;
+    }
+  }
+
+  function show_queue() {
+    const items = playlist.slice(1).map(function (video) {
+      const kind = video.is_request ? "request" : "default";
+      return $("<li>").append(
+        $("<span>").addClass("tag " + kind).text(kind),
+        $("<span>").addClass("what").text(video.title || short_link(video.url)).attr("title", video.url),
+        $("<span>").addClass("who").text(video.user)
+      );
+    });
+    $("#queue").empty().append(items.length ? items : $("<li>").text("Nothing queued."));
+  }
+
+  function change_player_src() {
+    if (playlist.length === 0) {
+      // Out of videos: fetch the playlist again, and if it is still empty, wait
+      // for a request instead of asking the server over and over.
+      $.getJSON("playlist/get_playlist").then(function (res) {
+        playlist = res;
+        if (playlist.length === 0) {
+          $("#status").text("Nothing to play yet. Request a video to start.");
+          show_queue();
+          return;
+        }
+        console.log("Got playlist and play");
+        change_player_src();
+      });
+      return;
+    }
+
+    const current = playlist[0];
+    $.getJSON("playlist/get_yt_info", { v: current.url }).then(
+      function (res) {
+        videoPlayer.src({ type: "video/" + (res.ext || "mp4"), src: res.video_url });
+        $("#title").text(res.title);
+        $("#user").text(current.user);
+        $("#url").text(res.url);
+        $("#duration").text(res.duration);
+        $("#status").text("");
+        show_queue();
+      },
+      function (err) {
+        console.log(err);
+        $("#status").text("Could not get " + current.url + ": " + ((err.responseJSON || {}).error || err.statusText));
       }
-      function pause() {
-        var videoPlayer = videojs("video");
-        videoPlayer.pause();
-      }
-      function mute() {
-        var videoPlayer = videojs("video");
-        videoPlayer.muted(true);
-      }
+    );
+  }
 
-      function get_playlist() {
-        $.ajax({
-          type: "GET",
-          dataType: "json",
-          url: "playlist/get_playlist",
-          success: function (res) {
-            playlist = res;
-          },
-          error: function (err) {
-            console.log(err);
-          },
-        });
-      }
-
-      function change_player_src() {
-        var videoPlayer = videojs("video");
-        if (playlist.length != 0) {
-          $.ajax({
-            type: "GET",
-            url: "playlist/get_yt_info?v=" + playlist[0].url,
-            success: function (res) {
-              videoPlayer.src({
-                type: "video/mp4",
-                src: res.video_url,
-              });
-              $("#title").text(res.title);
-              $("#user").text(playlist[0].user);
-              $("#url").text(res.url);
-              $("#duration").text(res.duration);
-            },
-            error: function (err) {
-              console.log(err);
+  function request() {
+    const user = $("#request_user").val();
+    $.getJSON("playlist/song_request", { user: user, url: $("#request_youtube").val() }).then(
+      function (res) {
+        if (res.length !== 0) {
+          socket.emit("player_control", {
+            data: "new_request",
+            src: {
+              duration: res.duration,
+              title: res.title,
+              url: res.url,
+              is_request: true,
+              user: user,
+              add_time: Date.now(),
             },
           });
         } else {
-          console.log("Playlist is empty.");
-          $.when(
-            $.ajax("playlist/get_playlist").then((res) => {
-              playlist = res;
-              console.log("Got playlist and play");
-              change_player_src();
-            })
-          );
+          console.log("Song is duplicated in the playlist.");
+        }
+      },
+      function (err) {
+        console.log(err);
+      }
+    );
+  }
+
+  function save_to_default() {
+    $.get("playlist/add_now_video_to_default_playlist", now_playing()).then(
+      function () {
+        console.log("Now playing video is saved to default playlist.");
+      },
+      function (err) {
+        console.log(err);
+      }
+    );
+  }
+
+  function add_video_event() {
+    videoPlayer.ready(function () {
+      videoPlayer.volume(0.05);
+      console.log("ready");
+    });
+
+    videoPlayer.on("ended", function () {
+      const video = now_playing();
+      $.get("playlist/ended", video).then(console.log, console.log);
+      $.get("playlist/remove_request", { url: video.url });
+      playlist.shift();
+      change_player_src();
+    });
+  }
+
+  function add_socket_event() {
+    socket.on("connect", function () {
+      socket.emit("player_control", { data: "Connected to the SocketServer..." });
+    });
+
+    socket.on("my_response", function (msg, cb) {
+      $("<li>").text("logs #" + msg.count + ": " + msg.data).appendTo("#log");
+      $("#log").scrollTop($("#log")[0].scrollHeight);
+      if (cb) {
+        cb();
+      }
+
+      if (msg.data == "pause") {
+        pause();
+      }
+      if (msg.data == "play") {
+        play();
+      }
+      if (msg.data == "mute") {
+        mute();
+      }
+      if (msg.data == "queue") {
+        console.log(msg.src);
+      }
+      if (msg.data == "new_request") {
+        playlist.push(msg.src);
+        if (playlist.length === 1) {
+          change_player_src();
+        } else {
+          console.log(msg.src.title + " has been added into playlist.");
+          // Keep the video on screen first, then the requests, then the default videos.
+          const [live_video, ...rest] = playlist;
+          playlist = [live_video]
+            .concat(rest.filter(function (video) { return video.is_request; }))
+            .concat(rest.filter(function (video) { return !video.is_request; }));
+          show_queue();
         }
       }
+    });
 
-      function request() {
-        var socket = io(namespace);
-        var user = $("#request_user").val();
-        var youtube_address = $("#request_youtube").val();
-        $.ajax({
-          type: "GET",
-          url: "playlist/song_request?user=" + user + "&url=" + youtube_address,
-          success: function (res) {
-            if (res.length != 0) {
-              let new_request = {
-                duration: res.duration,
-                title: res.title,
-                url: res.url,
-                is_request: true,
-                user: user,
-                add_time: Date.now(),
-              };
-              socket.emit("player_control", {
-                data: "new_request",
-                src: new_request,
-              });
-            } else {
-              console.log("Song is duplicated in the playlist.");
-            }
-          },
-          error: function (err) {
-            console.log(err);
-          },
-        });
-      }
+    $("form#broadcast_pause").on("submit", function () {
+      socket.emit("player_control", { data: "pause" });
+      return false;
+    });
+    $("form#broadcast_play").on("submit", function () {
+      socket.emit("player_control", { data: "play" });
+      return false;
+    });
+    $("form#broadcast_mute").on("submit", function () {
+      socket.emit("player_control", { data: "mute" });
+      return false;
+    });
 
-      function save_to_default() {
-        var user = $("#user").text();
+    $("form#disconnect").on("submit", function () {
+      socket.emit("disconnect_request");
+      return false;
+    });
 
-        if (user === "") {
-          user = "anonymous";
-        }
+    socket.connect();
+  }
 
-        var url = $("#url").text();
-        var duration = $("#duration").text();
-        $.ajax({
-          type: "GET",
-          url:
-            "playlist/add_now_video_to_default_playlist?user=" +
-            user +
-            "&url=" +
-            url +
-            "&duration=" +
-            duration,
-          success: function (res) {
-            console.log("Now playing video is saved to default playlist.");
-          },
-          error: function (err) {
-            console.log(err);
-          },
-        });
-      }
-
-      function init_player() {
-        $.when(
-          $.ajax("playlist/get_playlist").then((res) => {
-            playlist = res;
-            change_player_src();
-          })
-        );
-      }
-
-      function add_video_event() {
-        var socket = io(namespace);
-
-        var videoPlayer = videojs("video");
-
-        // ready event
-        videoPlayer.ready(function () {
-          videoPlayer.volume(0.05);
-          console.log("ready");
-        });
-
-        // ended event
-        videoPlayer.on("ended", function () {
-          var user = $("#user").text();
-          var url = $("#url").text();
-          var duration = $("#duration").text();
-
-          if (user === "") {
-            user = "anonymous";
-          }
-          $.ajax({
-            type: "GET",
-            url:
-              "playlist/ended?user=" +
-              user +
-              "&url=" +
-              url +
-              "&duration=" +
-              duration,
-            success: function (res) {
-              console.log(res);
-            },
-            error: function (err) {
-              console.log(err);
-            },
-          });
-
-          $.ajax("playlist/remove_request?url=" + url).then(
-            $.when(playlist.shift()).done(change_player_src())
-          );
-        });
-      }
-
-      function add_socket_event() {
-        var socket = io(namespace);
-
-        socket.on("connect", function () {
-          socket.emit("player_control", {
-            data: "Connected to the SocketServer...",
-          });
-        });
-
-        socket.on("my_response", function (msg, cb) {
-          $("#log").append(
-            "<br>" +
-              $("<div/>")
-                .text("logs #" + msg.count + ": " + msg.data)
-                .html()
-          );
-          if (cb) {
-            cb();
-          }
-
-          if (msg.data == "pause") {
-            pause();
-          }
-          if (msg.data == "play") {
-            play();
-          }
-          if (msg.data == "mute") {
-            mute();
-          }
-          if (msg.data == "queue") {
-            console.log(msg.src);
-          }
-          if (msg.data == "new_request") {
-            if (playlist.length === 0) {
-              $.when(playlist.push(msg.src)).done(change_player_src());
-            } else if (playlist.length === 1) {
-              playlist.push(msg.src);
-              console.log(msg.src.title + " has been added into playlist.");
-            } else {
-              playlist.push(msg.src);
-              console.log(msg.src.title + " has been added into playlist.");
-
-              // new playlist for priority
-              var live_video = [playlist[0]]; // first one
-              var request_playlist = [];
-              var default_playlist = [];
-
-              playlist.forEach((video, index) => {
-                if (index != 0) {
-                  if (video.is_request) {
-                    request_playlist.push(video);
-                  } else {
-                    default_playlist.push(video);
-                  }
-                }
-              });
-              playlist = live_video.concat(
-                request_playlist.concat(default_playlist)
-              );
-            }
-          }
-        });
-
-        $("form#broadcast_pause").submit(function (event) {
-          socket.emit("player_control", {
-            data: "pause",
-          });
-          return false;
-        });
-        $("form#broadcast_play").submit(function (event) {
-          socket.emit("player_control", {
-            data: "play",
-          });
-          return false;
-        });
-        $("form#broadcast_mute").submit(function (event) {
-          socket.emit("player_control", {
-            data: "mute",
-          });
-          return false;
-        });
-
-        $("form#disconnect").submit(function (event) {
-          socket.emit("disconnect_request");
-          return false;
-        });
-      }
-
-      $(document).ready(function () {
-        init_player();
-        add_video_event();
-        add_socket_event();
-      });
-    </script>
-  </body>
+  $(function () {
+    change_player_src();
+    add_video_event();
+    add_socket_event();
+  });
+</script>
+</body>
 </html>
