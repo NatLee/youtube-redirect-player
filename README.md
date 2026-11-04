@@ -60,12 +60,8 @@ and one button pauses them all.
 
 ```mermaid
 flowchart TB
-    subgraph Screens["Every open player · templates/index.html"]
-        direction LR
-        P1["Player A"] ~~~ P2["Player B"] ~~~ P3["Player C"]
-    end
+    Screens["<b>Every open player</b><br/>laptop, TV, phone…<br/>templates/index.html"]
     subgraph App["Flask app"]
-        direction LR
         WS["Socket.IO namespace /test<br/>main.py"]
         API["/playlist API<br/>playlist.py"]
     end
