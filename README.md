@@ -59,15 +59,15 @@ and one button pauses them all.
 ## How it works
 
 ```mermaid
-flowchart LR
-    subgraph Screens["Every open player (templates/index.html)"]
-        P1["Player A"]
-        P2["Player B"]
-        P3["Player C"]
+flowchart TB
+    subgraph Screens["Every open player · templates/index.html"]
+        direction LR
+        P1["Player A"] ~~~ P2["Player B"] ~~~ P3["Player C"]
     end
     subgraph App["Flask app"]
-        WS["Socket.IO namespace /test<br/>(main.py)"]
-        API["/playlist API<br/>(playlist.py)"]
+        direction LR
+        WS["Socket.IO namespace /test<br/>main.py"]
+        API["/playlist API<br/>playlist.py"]
     end
     DB[("playlist.db · SQLite<br/>request · default · history")]
     Y["yt-dlp + Deno"]
