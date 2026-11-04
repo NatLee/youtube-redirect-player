@@ -178,9 +178,10 @@ Checked on 2026-11-04 with the final version in Docker and two headless Edge win
 - **yt-dlp found YouTube links at first,** with the right title and duration, but **YouTube did
   not stream them to the browser.** The player says "The media could not be loaded"; Edge blocks
   the reply as `ERR_BLOCKED_BY_ORB`, which means YouTube answered with something other than video.
-- **YouTube then stopped handing out links, too.** After about fifteen lookups in forty minutes from
-  the same machine, it answered "Sign in to confirm you're not a bot". A request then comes back as
-  `[]`, and `get_yt_info` answers 502 with that message.
+- **YouTube also rations the links.** After about fifteen lookups in forty minutes from the same
+  machine, it answered "Sign in to confirm you're not a bot" instead. While that lasts, a request
+  comes back as `[]` and `get_yt_info` answers 502 with that message. Half an hour later the links
+  came back.
 - **Other sites yt-dlp knows still play end to end.** The screenshot below runs on Blender's open
   movies from Wikimedia Commons.
 
