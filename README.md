@@ -210,3 +210,7 @@ rebuild.
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) finds the links, [Video.js](https://videojs.com/) plays
   them, and [Flask-SocketIO](https://github.com/miguelgrinberg/Flask-SocketIO) keeps the screens in
   step.
+
+## License
+
+[MIT](LICENSE), same as Gen 1.
