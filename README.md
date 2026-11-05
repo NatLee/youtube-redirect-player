@@ -1,28 +1,25 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/hero-dark.png">
-    <img src="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/hero-light.png" width="960" alt="YouTube Redirect Player, exhibit 2 of 3 in the streaming-player lineage, stamped retired. Every open player talks to Flask and Socket.IO, which relays requests and play, pause and mute to everyone, uses yt-dlp to find each direct link and keeps three SQLite playlists: request (plays first), default (shuffled) and history (last 200). A timeline at the bottom runs from youtube-video-redirector (2021) to youtube-redirect-player (2023, you are here) to streaming-player (current).">
+    <img src="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/hero-light.png" width="960" alt="YouTube Redirect Player, Gen 2 of the streaming-player family. Every open player talks to Flask and Socket.IO, which relays requests and play, pause and mute to everyone, uses yt-dlp to find each direct link and keeps three SQLite playlists: request (plays first), default (shuffled) and history (last 200); the start command is python main.py. A timeline at the bottom runs from youtube-video-redirector (2021) to youtube-redirect-player (2023, this repo) to streaming-player (current).">
   </picture>
 </p>
 
 <p align="center">
   <a href="https://github.com/NatLee/youtube-redirect-player/actions/workflows/ci.yml"><img src="https://github.com/NatLee/youtube-redirect-player/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/status-retired-8a5f12" alt="Status: retired">
-  <a href="https://github.com/NatLee/streaming-player"><img src="https://img.shields.io/badge/successor-streaming--player-0f6b62" alt="Successor: streaming-player"></a>
+  <a href="https://github.com/NatLee/streaming-player"><img src="https://img.shields.io/badge/family-streaming--player-0f6b62" alt="Family: streaming-player"></a>
   <img src="https://img.shields.io/badge/python-3.12-3776ab" alt="Python 3.12">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/NatLee/youtube-redirect-player" alt="License: MIT"></a>
 </p>
-
-> [!IMPORTANT]
-> **This project is retired.** It is the second of three generations of the same idea, and the one
-> that lives on is **[streaming-player](https://github.com/NatLee/streaming-player)**. Use that one.
-> This repo stays as a working museum piece: the final version below runs, has tests and CI, and
-> won't get new features.
 
 YouTube Redirect Player is a small Flask app that turns any number of browser tabs into one player.
 You request a video by its YouTube link, [yt-dlp](https://github.com/yt-dlp/yt-dlp) finds the
 video's direct file link, and the page plays that file. The playlist lives in SQLite, and
 [Socket.IO](https://socket.io/) (a websocket library) carries every request and every play, pause
 and mute to all open players. Open it on a laptop and a TV, and both follow along.
+
+It's the second of three generations of the same idea; the current one is
+[streaming-player](https://github.com/NatLee/streaming-player).
 
 ## The family tree
 
@@ -110,7 +107,7 @@ Everything is a `GET` with query parameters, so you can try it from the address 
 Routes that need a video answer 400 without one. A request without `user` is filed under
 `anonymous`, the same name the page uses.
 
-## Run the final version
+## Run it
 
 ### With Docker
 
@@ -170,7 +167,7 @@ same build, then starts the container and checks the page, the API and the Socke
 
 ## Status in 2026: what still works
 
-Checked on 2026-11-04 with the final version in Docker and two headless Edge windows:
+Checked on 2026-11-04 with this version in Docker and two headless Edge windows:
 
 - **The player part works.** Requests, the three playlists, the queue order, the history limit, and
   play, pause and mute across windows all behave as described above. The socket runs over a real
@@ -194,10 +191,10 @@ rebuild.
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/screenshot-dark.png">
-    <img src="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/screenshot-light.png" width="960" alt="The final version in two windows, a desktop one and a phone-sized one. Both show Spring - Blender Open Movie requested by natlee, paused on the same frame. The desktop window shows bob's request, the Every player buttons and an Up next list with two requests ahead of four saved videos. Both socket logs list the same new_request and pause messages.">
+    <img src="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/screenshot-light.png" width="960" alt="Today's version in two windows, a desktop one and a phone-sized one. Both show Spring - Blender Open Movie requested by natlee, paused on the same frame. The desktop window shows bob's request, the Every player buttons and an Up next list with two requests ahead of four saved videos. Both socket logs list the same new_request and pause messages.">
   </picture>
 </p>
-<p align="center"><sub>The final version in Docker, in two windows at once: bob's request and "Pause all player" from the big one reached the small one too.<br>The queue is made of Blender's open movies on Wikimedia Commons, because YouTube's own links no longer play in a browser (see above).<br>Spring © Blender Foundation, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</sub></p>
+<p align="center"><sub>Today's version in Docker, in two windows at once: bob's request and "Pause all player" from the big one reached the small one too.<br>The queue is made of Blender's open movies on Wikimedia Commons, because YouTube's own links no longer play in a browser (see above).<br>Spring © Blender Foundation, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</sub></p>
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/10178964/214097192-32ef6390-4481-4301-8743-98571192449f.png" width="480" alt="The 2023 version: a Video.js player above plain text lines with the title, link, duration and user, then unstyled buttons and the socket log.">
