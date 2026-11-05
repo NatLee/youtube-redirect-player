@@ -1,16 +1,17 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/hero-dark.png">
-    <img src="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/hero-light.png" width="960" alt="YouTube Redirect Player, Gen 2 of the streaming-player family. Every open player talks to Flask and Socket.IO, which relays requests and play, pause and mute to everyone, uses yt-dlp to find each direct link and keeps three SQLite playlists: request (plays first), default (shuffled) and history (last 200); the start command is python main.py. A timeline at the bottom runs from youtube-video-redirector (2021) to youtube-redirect-player (2023, this repo) to streaming-player (current).">
+    <img src="https://raw.githubusercontent.com/NatLee/youtube-redirect-player/main/docs/images/hero-light.png" width="960" alt="YouTube Redirect Player, built with Flask, Socket.IO, SQLite and yt-dlp. Every open player talks to Flask and Socket.IO, which relays requests and play, pause and mute to everyone, uses yt-dlp to find each direct link and keeps three SQLite playlists: request (plays first), default (shuffled) and history (last 200). A strip at the bottom shows the two Docker commands that start it.">
   </picture>
 </p>
 
 <p align="center">
   <a href="https://github.com/NatLee/youtube-redirect-player/actions/workflows/ci.yml"><img src="https://github.com/NatLee/youtube-redirect-player/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/NatLee/streaming-player"><img src="https://img.shields.io/badge/family-streaming--player-0f6b62" alt="Family: streaming-player"></a>
   <img src="https://img.shields.io/badge/python-3.12-3776ab" alt="Python 3.12">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/NatLee/youtube-redirect-player" alt="License: MIT"></a>
 </p>
+
+> There's a newer project for this: [streaming-player](https://github.com/NatLee/streaming-player).
 
 YouTube Redirect Player is a small Flask app that turns any number of browser tabs into one player.
 You request a video by its YouTube link, [yt-dlp](https://github.com/yt-dlp/yt-dlp) finds the
@@ -18,37 +19,10 @@ video's direct file link, and the page plays that file. The playlist lives in SQ
 [Socket.IO](https://socket.io/) (a websocket library) carries every request and every play, pause
 and mute to all open players. Open it on a laptop and a TV, and both follow along.
 
-It's the second of three generations of the same idea; the current one is
-[streaming-player](https://github.com/NatLee/streaming-player).
-
-## The family tree
-
-Three repos, one idea that kept growing. Each generation added something and let something go.
-
-```mermaid
-flowchart TB
-    G1["Gen 1 · 2021<br/><b>youtube-video-redirector</b><br/>Flask + yt-dlp"]
-    G2["Gen 2 · 2023<br/><b>youtube-redirect-player</b><br/>Flask + Socket.IO + SQLite"]
-    G3["Gen 3 · current<br/><b>streaming-player</b><br/>Django + Channels + Redis"]
-    G1 -- "+ three playlists<br/>+ every screen in sync<br/>− the ?v= page" --> G2
-    G2 -- "+ chat commands<br/>+ login, admin panel<br/>− pause all screens" --> G3
-    style G2 fill:#f2e6cb,stroke:#8a5f12,stroke-width:2px,color:#1f1c17
-```
-
-| | Gen 1 | Gen 2 | Gen 3 |
-|---|---|---|---|
-| In one line | One video per URL | One shared playlist on every open screen | A stream player your chat controls |
-| Added | `/?v=<id>` finds the direct link and plays it | Request, default and history playlists; play, pause and mute on every screen at once | Nightbot chat commands, login, admin panel, a queue with favorite and block marks, Swagger |
-| Let go | Nothing yet, it was the first | The one-video `?v=` page and the visible direct link | Pause and mute for every screen at once |
-
-You are looking at Gen 2. Gen 1 is
-[youtube-video-redirector](https://github.com/NatLee/youtube-video-redirector); Gen 3 is
-[streaming-player](https://github.com/NatLee/streaming-player).
-
 ## What it solved
 
-Gen 1 could play exactly one video: the one in the address bar. This generation answers the next
-question, "what plays after that, and on which screen?" It keeps a queue, lets people put videos in
+Playing one video from the address bar is easy. This app answers the next question: "what plays
+after that, and on which screen?" It keeps a queue, lets people put videos in
 it by name, and fills the gaps with a shuffled list of saved favourites. Because the queue and the
 controls travel over a websocket, you can play anywhere: every open page hears about a new request,
 and one button pauses them all.
@@ -203,11 +177,10 @@ rebuild.
 
 ## Credits
 
-- Built on [youtube-video-redirector](https://github.com/NatLee/youtube-video-redirector), Gen 1.
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) finds the links, [Video.js](https://videojs.com/) plays
   them, and [Flask-SocketIO](https://github.com/miguelgrinberg/Flask-SocketIO) keeps the screens in
   step.
 
 ## License
 
-[MIT](LICENSE), same as Gen 1.
+[MIT](LICENSE)
