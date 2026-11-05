@@ -6,6 +6,10 @@
            --default-background-color=00000000 --virtual-time-budget=5000
            --screenshot=hero-light.png "file:///…/hero.html"
   then shrink with: magick hero-light.png -strip -dither None -colors 256 hero-light.png
+  The 1280x640 social preview (../cover.png) is hero-light.png scaled to 1180 px wide, centred on the
+  banner background made 5% darker:
+    magick -size 1280x640 "xc:<bg>" -fill black -colorize 5% ( hero-light.png -resize 1180x )
+           -gravity center -composite -strip -colors 256 +dither cover.png
 -->
 <html lang="en">
 <head>
@@ -42,11 +46,9 @@
   .tag { margin: 12px 0 0; font-size: 16.5px; color: var(--muted); }
   .tag b { color: var(--ink); font-weight: 600; }
 
-  .stamp { position: absolute; right: 46px; top: 40px; transform: rotate(-5deg); text-align: center;
-           border: 2px solid var(--brass); border-radius: 12px; padding: 9px 16px 8px; color: var(--brass); }
-  .stamp .big { font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: .18em; }
-  .stamp .small { font-size: 11px; font-weight: 600; letter-spacing: .06em; margin-top: 2px; }
-  .stamp .small span { font-family: "JetBrains Mono", Consolas, monospace; }
+  .cmd { position: absolute; right: 46px; top: 44px; font-family: "JetBrains Mono", Consolas, monospace; font-size: 14px;
+         padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow); }
+  .cmd span { color: var(--muted); margin-right: 8px; user-select: none; }
 
   .node { position: absolute; background: var(--card); border: 1px solid var(--line); border-radius: 14px;
           box-shadow: var(--shadow); padding: 13px 16px; }
@@ -100,15 +102,12 @@
 <script>if (location.hash === '#dark') document.documentElement.className = 'dark';</script>
 <div class="frame">
   <header>
-    <p class="eyebrow">Exhibit 2 of 3 · the streaming-player lineage</p>
+    <p class="eyebrow">Gen 2 · the streaming-player family</p>
     <h1>YouTube Redirect Player</h1>
     <p class="tag">One shared playlist. Requests and <b>play / pause / mute</b> reach <b>every open player</b>.</p>
   </header>
 
-  <div class="stamp">
-    <div class="big">RETIRED</div>
-    <div class="small">successor: <span>streaming-player</span></div>
-  </div>
+  <div class="cmd"><span>$</span>python main.py</div>
 
   <svg class="wires" width="960" height="400">
     <path class="wire" d="M286 228 H344"/>
@@ -143,7 +142,7 @@
   <div class="lineage">
     <div class="rail"></div>
     <div class="stop" id="g1"><div class="dot"></div><div class="name">youtube-video-redirector</div><div class="when">GEN 1 · 2021</div></div>
-    <div class="stop here" id="g2"><div class="dot"></div><div class="name">youtube-redirect-player</div><div class="when">GEN 2 · 2023 · YOU ARE HERE</div></div>
+    <div class="stop here" id="g2"><div class="dot"></div><div class="name">youtube-redirect-player</div><div class="when">GEN 2 · 2023 · THIS REPO</div></div>
     <div class="stop now" id="g3"><div class="dot"></div><div class="name">streaming-player</div><div class="when">GEN 3 · CURRENT</div></div>
   </div>
 </div>
